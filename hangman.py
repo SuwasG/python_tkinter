@@ -60,27 +60,82 @@ class HangmanGame:
                 stages[i]()
                 # draw_head()
     def draw_head(self):
-        self.hangman_canvas.create_oval(125, 50, 185, 110, outline='black')
+        self.hangman_canvas.create_oval(125, 50, 185, 110, outline='white')
 
     def draw_body(self):
-        self.hangman_canvas.create_line(155,110, 155, 170, fill='black')
+        self.hangman_canvas.create_line(155,110, 155, 170, fill='white')
     
     def draw_left_arm(self):
-        self.hangman_canvas.create_line(155, 130, 125, 150, fill='black')
+        self.hangman_canvas.create_line(155, 130, 125, 150, fill='white')
 
     def draw_right_arm(self):
-        self.hangman_canvas.create_line(155, 130,185, 150, fill='black' )
+        self.hangman_canvas.create_line(155, 130,185, 150, fill='white' )
 
     def draw_left_leg(self):
-        self.hangman_canvas.create_line(155,170, 125, 200, fill='black')
+        self.hangman_canvas.create_line(155,170, 125, 200, fill='white')
 
     def draw_right_leg(self):
-        self.hangman_canvas.create_line(155, 170, 185, 200, fill='black')
+        self.hangman_canvas.create_line(155, 170, 185, 200, fill='white')
 
     def draw_face(self):
-        self.hangman_canvas.create_line(140, 70, 150,80, fill='black'  )
-        self.hangman_canvas.create_line(160, 70, 170, 80, fill='black')
-        self.hangman_canvas.create_arc(140, 85,70, 105, start=0, extent=180, fill='black')
+        self.hangman_canvas.create_oval(140, 70, 150,80, fill='black')
+        self.hangman_canvas.create_oval(160, 70, 170, 80, fill='black')
+        self.hangman_canvas.create_arc(140, 85,170, 105, start=0, extent=180, fill='white')
+    
+    def guess_letter(self,letter):
+        if letter in self.secret_word and letter not in self.correct_guess:
+            self.correct_guess.add(letter)
+        elif letter not in self.incorrect_guess:
+            self.incorrect_guess.add(letter)
+            self.attempt_left-=1
+            self.update_hangman_canvas()
+        self.update_word_display()
+        self.check_game_over()
+    
+    def update_word_display(self):
+        display_word= ' '.join([letter if letter in self.correct_guess else '_' for letter in self.secret_word])
+        self.word_display.config(text=display_word)
+    
+    def check_game_over(self):
+        if set(self.secret_word).issubset(self.correct_guess):
+            self.display_game_over_message('Congratilations, You have won.')
+        elif self.attempt_left==0:
+            self.display_game_over_message(f"Game Over, The word was {self.secret_word}")
+    def display_game_over_message(self, message):
+        style_font = ('Arial', 20, 'italic')
+        button_bg='green'
+        button_fg='white'
+        button_font=('Halvetica', 20,'bold')
+        self.reset_btn.pack_forget()
+        self.btn_frame.pack_forget()
+        self.game_over_label= tk.Label(self.master,text=message, font=style_font, bg='red', fg='white')
+        self.game_over_label.pack(pady=10)
+
+
+        if not hasattr(self, 'restart_button'):
+            self.restart_btn=tk.Button(self.master, text="Restart Game", command=self.reset_game, width=20, height=2, bg=button_bg, fg=button_fg, font=button_font)
+        self.restart_btn.pack(pady=3)
+    
+    def reset_game(self):
+        self.secret_word=self.choose_secret_word()
+        self.correct_guess=set()
+        self.incorrect_guess=set()
+        self.attempt_left=7
+        
+        self.hangman_canvas.delete('all')
+        self.update_word_display()
+
+        for frame in self.btn_frame.winfo_children():
+            for button in frame.winfo_children():
+                button.configure(state=tk.NORMAL)
+        self.reset_btn.pack(pady=15)
+
+        if hasattr(self, 'game_over_label') and self.game_over_label.winfo_exists():
+                self.game_over_label.pack_forget()
+        if hasattr(self, 'restart_btn') and self.reset_btn.winfo_exists():
+            self.restart_btn.pack_forget()
+        
+        self.btn_frame.pack()
 
 def main():
     root = tk.Tk()
@@ -88,4 +143,3 @@ def main():
     root.mainloop()
 if __name__=='__main__':
     main()
-
